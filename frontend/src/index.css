@@ -875,6 +875,15 @@ html, body, #root {
   100% { stroke-dashoffset: 0; }
 }
 
+@keyframes title-glow {
+  from {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 25px rgba(234, 88, 12, 0.35)) drop-shadow(0 0 50px rgba(234, 88, 12, 0.15));
+  }
+  to {
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 40px rgba(234, 88, 12, 0.55)) drop-shadow(0 0 80px rgba(234, 88, 12, 0.25));
+  }
+}
+
 /* ─── Utility ──────────────────────────────────────────────── */
 .glassmorphism {
   background: rgba(24, 24, 27, 0.8);
@@ -897,3 +906,252 @@ html, body, #root {
 .animate-fade-in {
   animation: fadeIn 400ms ease-out;
 }
+
+/* ─── Landing Page ─────────────────────────────────────────── */
+.landing-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 45%, #1c0e06 0%, var(--bg-canvas-matte) 60%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.landing-particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.landing-content {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  max-width: 680px;
+  padding: var(--space-6);
+  margin-bottom: 60px; /* Offset to push above mountains slightly */
+}
+
+.landing-badge {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  padding: 6px 14px;
+  text-transform: uppercase;
+  color: #fdba74;
+  background: rgba(234, 88, 12, 0.08);
+  border: 1px solid rgba(234, 88, 12, 0.18);
+  border-radius: 100px;
+  margin-bottom: var(--space-5);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 0 15px rgba(234, 88, 12, 0.05);
+}
+
+.landing-title {
+  font-family: var(--font-sans);
+  font-size: 72px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  padding-left: 0.15em;
+  background: linear-gradient(to bottom, #ffffff 40%, #fdba74 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-3);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 25px rgba(234, 88, 12, 0.35));
+  animation: title-glow 3s ease-in-out infinite alternate;
+}
+
+.landing-desc {
+  font-size: 18px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 580px;
+}
+
+.landing-italic {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  font-style: normal;
+  color: #fb923c;
+  background: rgba(24, 24, 27, 0.4);
+  border: 1px dashed rgba(234, 88, 12, 0.25);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-8);
+  display: inline-block;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(4px);
+}
+
+.landing-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 440px;
+  gap: var(--space-4);
+}
+
+.landing-input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.landing-input-icon {
+  position: absolute;
+  left: var(--space-4);
+  color: var(--text-secondary);
+  pointer-events: none;
+  transition: color var(--transition-fast), filter var(--transition-fast);
+  z-index: 2;
+}
+
+.landing-input-wrapper:focus-within .landing-input-icon {
+  color: var(--accent-ember-bright);
+  filter: drop-shadow(0 0 4px rgba(249, 115, 22, 0.4));
+}
+
+.landing-input {
+  width: 100%;
+  padding: 14px var(--space-4) 14px 46px;
+  background: rgba(24, 24, 27, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 100px;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+  backdrop-filter: blur(8px);
+}
+
+.landing-input:hover {
+  border-color: rgba(234, 88, 12, 0.3);
+  background: rgba(24, 24, 27, 0.7);
+  box-shadow: 0 0 15px rgba(234, 88, 12, 0.05);
+}
+
+.landing-input:focus {
+  border-color: var(--accent-ember-bright);
+  box-shadow: 0 0 0 4px var(--accent-ember-subtle), 0 0 25px rgba(234, 88, 12, 0.15);
+  background: rgba(24, 24, 27, 0.85);
+}
+
+.landing-input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.landing-btn {
+  width: 100%;
+  padding: 14px var(--space-6);
+  background: var(--accent-ember-gradient);
+  border: none;
+  border-radius: 100px;
+  color: white;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-indent: 0.2em;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
+}
+
+.landing-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 25px rgba(234, 88, 12, 0.5), 0 0 35px rgba(249, 115, 22, 0.3);
+  transform: translateY(-1px);
+}
+
+.landing-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.landing-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.landing-btn-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.landing-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-sm);
+  max-width: 100%;
+  animation: slideUp 200ms ease-out;
+}
+
+.landing-error .error-icon {
+  font-size: 14px;
+}
+
+.landing-error .error-text {
+  font-size: 12px;
+  color: #fca5a5;
+  text-align: left;
+}
+
+.landing-landscape-wrapper {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 280px;
+  width: 100%;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.landing-landscape {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Float up animation keyframes for embers */
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-85vh) translateX(50px) scale(0.6);
+    opacity: 0;
+  }
+}
+

@@ -3,6 +3,7 @@ import ConceptCanvas from './components/canvas/ConceptCanvas';
 import TelemetryCards from './components/dashboard/TelemetryCards';
 import NarrativePanel from './components/dashboard/NarrativePanel';
 import CommandBar from './components/dashboard/CommandBar';
+import LandingPage from './components/LandingPage';
 import { Flame } from 'lucide-react';
 
 export default function App() {
@@ -11,16 +12,33 @@ export default function App() {
     isAnalyzing, isStreaming, highlightedNodes, highlightedEdges,
     error, repoPath, actions,
     analyze, generateNarrative, traceFlow, clearTrace,
-    setNodes, setEdges,
+    setNodes, setEdges, setError,
   } = useAmaterasu();
 
   const hasRepo = nodes.length > 0;
+
+  const handleReset = () => {
+    setNodes([]);
+    setEdges([]);
+    setError(null);
+  };
+
+  if (!hasRepo) {
+    return (
+      <LandingPage
+        onAnalyze={analyze}
+        isAnalyzing={isAnalyzing}
+        error={error}
+        setError={setError}
+      />
+    );
+  }
 
   return (
     <div className="app-shell">
       {/* Header */}
       <header className="app-header">
-        <div className="app-logo">
+        <div className="app-logo" onClick={handleReset} style={{ cursor: 'pointer' }} title="Return to landing page">
           <div className="app-logo-icon">
             <Flame size={16} color="white" />
           </div>
