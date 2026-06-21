@@ -1,87 +1,28 @@
-import { useEffect, useRef, useState } from 'react';
-import { Network, Layers, Database, Zap } from 'lucide-react';
+import { Network, FileText, GitBranch, Zap } from 'lucide-react';
 
-function AnimatedValue({ value, suffix = '' }) {
-  const [display, setDisplay] = useState(value);
-  const [pulse, setPulse] = useState(false);
-  const prevRef = useRef(value);
-
-  useEffect(() => {
-    if (value !== prevRef.current) {
-      setPulse(true);
-      const timer = setTimeout(() => setPulse(false), 600);
-      prevRef.current = value;
-      setDisplay(value);
-      return () => clearTimeout(timer);
-    }
-  }, [value]);
-
-  return (
-    <span className={`telemetry-card-value ${pulse ? 'telemetry-value-pulse' : ''}`}>
-      {display}{suffix}
-    </span>
-  );
-}
-
-export default function TelemetryCards({ telemetry }) {
-  const cards = [
-    {
-      label: 'Concept Clusters',
-      value: telemetry.clusters,
-      icon: <Network size={14} />,
-      meta: 'AST Ingestion Engine',
-      accent: '#ea580c',
-    },
-    {
-      label: 'Active Trace',
-      value: telemetry.activeTrace || '—',
-      icon: <Layers size={14} />,
-      meta: 'Flow Vector Logic',
-      accent: '#f59e0b',
-      isText: true,
-    },
-    {
-      label: 'RAG Cache',
-      value: telemetry.cacheHealth,
-      suffix: '%',
-      icon: <Database size={14} />,
-      meta: 'Vector Store Cache',
-      accent: '#8b5cf6',
-    },
-    {
-      label: 'LPU Throughput',
-      value: telemetry.throughput,
-      icon: <Zap size={14} />,
-      meta: 'Groq SDK Pipeline',
-      accent: '#06b6d4',
-      isText: true,
-    },
+export default function HeaderStats({ telemetry }) {
+  const stats = [
+    { icon: <Network size={12} />, value: telemetry.clusters, label: 'clusters', color: '#ea580c' },
+    { icon: <FileText size={12} />, value: telemetry.files, label: 'files', color: '#f59e0b' },
+    { icon: <GitBranch size={12} />, value: telemetry.dependencies || 0, label: 'deps', color: '#8b5cf6' },
+    { icon: <Zap size={12} />, value: telemetry.throughput, label: '', color: '#06b6d4', isText: true },
   ];
 
   return (
-    <div className="telemetry-grid">
-      {cards.map((card, i) => (
-        <div
-          key={i}
-          className="telemetry-card"
-          style={{ '--card-accent': card.accent }}
-        >
-          <div className="telemetry-card-header">
-            <span className="telemetry-card-label">{card.label}</span>
-            <span className="telemetry-card-icon" style={{ color: card.accent }}>
-              {card.icon}
-            </span>
-          </div>
-          {card.isText ? (
-            <span className="telemetry-card-value" style={{ fontSize: card.value?.length > 8 ? 14 : 22 }}>
-              {card.value}
-            </span>
-          ) : (
-            <AnimatedValue value={card.value} suffix={card.suffix || ''} />
-          )}
-          <span className="telemetry-card-meta">{card.meta}</span>
+    <div className="header-stats">
+      {stats.map((stat, i) => (
+        <div key={i} className="header-stat-pill" style={{ '--pill-color': stat.color }}>
+          <span className="header-stat-icon" style={{ color: stat.color }}>{stat.icon}</span>
+          <span className="header-stat-value">{stat.value}</span>
+          {stat.label && <span className="header-stat-label">{stat.label}</span>}
         </div>
       ))}
+      {telemetry.activeTrace && (
+        <div className="header-stat-pill active-trace" style={{ '--pill-color': '#ea580c' }}>
+          <span className="header-stat-trace-dot" />
+          <span className="header-stat-value">{telemetry.activeTrace}</span>
+        </div>
+      )}
     </div>
   );
 }

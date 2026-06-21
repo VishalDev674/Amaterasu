@@ -73,3 +73,12 @@ export async function queryVectorStore(query, topK = 5) {
   });
   return res.json();
 }
+
+export async function fetchFileContent(filePath) {
+  const res = await fetch(`${API_BASE}/file-content?path=${encodeURIComponent(filePath)}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to fetch file content' }));
+    throw new Error(err.error || 'Failed to fetch file content');
+  }
+  return res.json();
+}

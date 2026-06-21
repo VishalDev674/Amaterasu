@@ -79,7 +79,7 @@ app.post('/api/analyze', async (req, res) => {
     console.log(`[Analyze] Found ${currentRepo.fileCount} files, ${currentRepo.dependencyGraph.length} dependencies`);
 
     if (currentRepo.fileCount === 0) {
-      throw new Error('No supported source files (JS, JSX, TS, TSX, PY) found in the repository.');
+      throw new Error('No parseable source files found in the repository. Make sure the path points to a valid project directory.');
     }
 
     // 2. Generate concept map
@@ -90,9 +90,19 @@ app.post('/api/analyze', async (req, res) => {
     await vectorStore.index(currentRepo.files, absPath);
     console.log(`[Analyze] Vector store indexed ${currentRepo.fileCount} documents`);
 
+    // Build a file list without raw content (keep response lightweight)
+    const fileList = currentRepo.files.map(f => ({
+      filePath: f.filePath,
+      language: f.language,
+      lineCount: f.lineCount,
+      functions: f.functions,
+      classes: f.classes,
+    }));
+
     res.json({
       success: true,
       ...currentConceptMap,
+      fileList,
       telemetry: {
         clusters: currentConceptMap.totalClusters,
         files: currentConceptMap.totalFiles,
@@ -161,6 +171,26 @@ app.get('/api/telemetry', (req, res) => {
     groqReady,
     activeTrace: null,
     throughput: groqReady ? '500+ T/s' : 'Mock Mode',
+  });
+});
+
+// ─── GET /api/file-content ───────────────────────────────────────
+app.get('/api/file-content', (req, res) => {
+  const filePath = req.query.path;
+  if (!filePath) return res.status(400).json({ error: 'Missing path query parameter' });
+  if (!currentRepo) return res.status(400).json({ error: 'No repository analyzed yet' });
+
+  const file = currentRepo.files.find(f => f.filePath === filePath);
+  if (!file) return res.status(404).json({ error: `File not found: ${filePath}` });
+
+  res.json({
+    filePath: file.filePath,
+    language: file.language,
+    lineCount: file.lineCount,
+    content: file.content || '// Content not available',
+    functions: file.functions,
+    classes: file.classes,
+    imports: file.imports,
   });
 });
 

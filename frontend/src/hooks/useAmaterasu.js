@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { analyzeRepo, streamNarrative, traceFlow as traceFlowApi, getAvailableActions } from '../services/api';
+import { analyzeRepo, streamNarrative, traceFlow as traceFlowApi, getAvailableActions, fetchFileContent } from '../services/api';
 
 export function useAmaterasu() {
   const [nodes, setNodes] = useState([]);
@@ -20,6 +20,9 @@ export function useAmaterasu() {
   const [error, setError] = useState(null);
   const [repoPath, setRepoPath] = useState('');
   const [actions, setActions] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [fileContent, setFileContent] = useState(null);
+  const [isLoadingFile, setIsLoadingFile] = useState(false);
 
   const streamCleanupRef = useRef(null);
 
@@ -41,6 +44,7 @@ export function useAmaterasu() {
       setTelemetry({
         clusters: result.totalClusters || 0,
         files: result.totalFiles || 0,
+        dependencies: result.telemetry?.dependencies || 0,
         cacheHealth: result.telemetry?.vectorHealth?.cachePercentage || 99,
         throughput: result.telemetry?.groqReady ? '500+ T/s' : 'Mock',
         activeTrace: null,
@@ -131,13 +135,40 @@ export function useAmaterasu() {
     })));
   }, []);
 
+  // Select a file to view its code
+  const selectFile = useCallback(async (filePath) => {
+    if (!filePath) {
+      setSelectedFile(null);
+      setFileContent(null);
+      return;
+    }
+    setSelectedFile(filePath);
+    setIsLoadingFile(true);
+    try {
+      const result = await fetchFileContent(filePath);
+      setFileContent(result);
+    } catch (err) {
+      setError(`Failed to load file: ${err.message}`);
+      setFileContent(null);
+    } finally {
+      setIsLoadingFile(false);
+    }
+  }, []);
+
+  const closeFileViewer = useCallback(() => {
+    setSelectedFile(null);
+    setFileContent(null);
+  }, []);
+
   return {
     // State
     nodes, edges, clusters, telemetry, narrative,
     isAnalyzing, isStreaming, highlightedNodes, highlightedEdges,
     error, repoPath, actions,
+    selectedFile, fileContent, isLoadingFile,
     // Actions
     analyze, generateNarrative, traceFlow, clearTrace,
+    selectFile, closeFileViewer,
     setNodes, setEdges, setError,
   };
 }

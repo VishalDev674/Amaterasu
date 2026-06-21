@@ -8,7 +8,13 @@ const DOMAIN_RULES = [
   { domain: 'State Management', keywords: ['store', 'state', 'redux', 'context', 'provider', 'reducer', 'action', 'slice', 'zustand', 'recoil', 'hook'], icon: '⚡', color: '#10b981' },
   { domain: 'Utilities', keywords: ['util', 'helper', 'lib', 'common', 'shared', 'format', 'parse', 'validate', 'sanitize', 'transform'], icon: '🔧', color: '#64748b' },
   { domain: 'Testing', keywords: ['test', 'spec', 'mock', 'fixture', 'jest', 'mocha', 'cypress', 'vitest', 'playwright', 'e2e'], icon: '🧪', color: '#a855f7' },
-  { domain: 'Configuration', keywords: ['config', 'env', 'setting', 'constant', 'setup', 'init', 'bootstrap'], icon: '⚙️', color: '#78716c' },
+  { domain: 'Configuration', keywords: ['config', 'env', 'setting', 'constant', 'setup', 'init', 'bootstrap', '.env', 'toml', 'yaml', 'yml', 'ini', 'editorconfig', 'prettierrc', 'eslintrc', 'babelrc'], icon: '⚙️', color: '#78716c' },
+  { domain: 'Styles', keywords: ['css', 'scss', 'sass', 'less', 'style', 'theme', 'tailwind', 'font', 'animation', 'color', 'gradient', 'responsive', 'media'], icon: '🎭', color: '#f472b6' },
+  { domain: 'Markup & Templates', keywords: ['html', 'htm', 'template', 'ejs', 'pug', 'handlebars', 'hbs', 'mustache', 'xml', 'svg', 'xsl'], icon: '📄', color: '#fb923c' },
+  { domain: 'Documentation', keywords: ['readme', 'changelog', 'license', 'contributing', 'docs', '.md', '.txt', 'guide', 'tutorial', 'wiki'], icon: '📖', color: '#38bdf8' },
+  { domain: 'Data & Schemas', keywords: ['json', 'yaml', 'yml', 'toml', 'csv', 'graphql', 'proto', 'protobuf', 'openapi', 'swagger', 'fixture', 'seed', 'data'], icon: '📊', color: '#34d399' },
+  { domain: 'DevOps & CI', keywords: ['docker', 'dockerfile', 'compose', 'kubernetes', 'k8s', 'helm', 'terraform', 'ansible', 'ci', 'cd', 'pipeline', 'workflow', 'github', 'gitlab', 'jenkins', 'makefile', 'deploy', 'nginx', 'procfile'], icon: '🚀', color: '#818cf8' },
+  { domain: 'Build & Tooling', keywords: ['webpack', 'vite', 'rollup', 'esbuild', 'babel', 'tsconfig', 'package.json', 'cargo', 'gradle', 'maven', 'pom', 'build', 'compile', 'bundle', 'script'], icon: '🔨', color: '#fbbf24' },
 ];
 
 const DEFAULT_DOMAIN = { domain: 'Core Logic', icon: '💡', color: '#f97316' };

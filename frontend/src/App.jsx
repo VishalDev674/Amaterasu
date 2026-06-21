@@ -1,8 +1,9 @@
 import { useAmaterasu } from './hooks/useAmaterasu';
 import ConceptCanvas from './components/canvas/ConceptCanvas';
-import TelemetryCards from './components/dashboard/TelemetryCards';
+import HeaderStats from './components/dashboard/TelemetryCards';
 import NarrativePanel from './components/dashboard/NarrativePanel';
 import CommandBar from './components/dashboard/CommandBar';
+import CodeViewer from './components/dashboard/CodeViewer';
 import LandingPage from './components/LandingPage';
 import { Flame } from 'lucide-react';
 
@@ -11,7 +12,9 @@ export default function App() {
     nodes, edges, clusters, telemetry, narrative,
     isAnalyzing, isStreaming, highlightedNodes, highlightedEdges,
     error, repoPath, actions,
+    selectedFile, fileContent, isLoadingFile,
     analyze, generateNarrative, traceFlow, clearTrace,
+    selectFile, closeFileViewer,
     setNodes, setEdges, setError,
   } = useAmaterasu();
 
@@ -21,6 +24,7 @@ export default function App() {
     setNodes([]);
     setEdges([]);
     setError(null);
+    closeFileViewer();
   };
 
   if (!hasRepo) {
@@ -45,6 +49,9 @@ export default function App() {
           <span className="app-logo-text">AMATERASU</span>
           <span className="app-logo-badge">v2.0</span>
         </div>
+
+        {/* Center: Compact Stats */}
+        <HeaderStats telemetry={telemetry} />
 
         <div className="app-header-actions">
           {isAnalyzing && (
@@ -72,17 +79,25 @@ export default function App() {
           highlightedEdges={highlightedEdges}
           onNodesChange={setNodes}
           onEdgesChange={setEdges}
+          onNodeClick={selectFile}
         />
 
         {/* Right: Dashboard */}
         <div className="panel-dashboard">
-          <TelemetryCards telemetry={telemetry} />
-
-          <NarrativePanel
-            narrative={narrative}
-            isStreaming={isStreaming}
-            error={error}
-          />
+          {/* Code Viewer replaces the top area when a file is selected */}
+          {selectedFile ? (
+            <CodeViewer
+              fileContent={fileContent}
+              isLoading={isLoadingFile}
+              onClose={closeFileViewer}
+            />
+          ) : (
+            <NarrativePanel
+              narrative={narrative}
+              isStreaming={isStreaming}
+              error={error}
+            />
+          )}
 
           <CommandBar
             onAnalyze={analyze}

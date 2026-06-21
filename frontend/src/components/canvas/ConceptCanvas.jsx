@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useEffect } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -10,6 +10,8 @@ import {
 import '@xyflow/react/dist/style.css';
 import ConceptNode from './ConceptNode';
 import FileNode from './FileNode';
+import StepwiseView from './StepwiseView';
+import { LayoutGrid, GitBranch } from 'lucide-react';
 
 const nodeTypes = {
   conceptNode: ConceptNode,
@@ -21,7 +23,9 @@ const defaultEdgeOptions = {
   style: { strokeWidth: 1 },
 };
 
-export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, highlightedNodes, highlightedEdges, onNodesChange, onEdgesChange }) {
+export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, highlightedNodes, highlightedEdges, onNodesChange, onEdgesChange, onNodeClick }) {
+  const [viewMode, setViewMode] = useState('graph'); // 'graph' | 'steps'
+
   // Inject highlight state into node data
   const processedNodes = useMemo(() => {
     if (!inputNodes) return [];
@@ -55,6 +59,13 @@ export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, hi
     setEdges(inputEdges || []);
   }, [inputEdges]);
 
+  // Handle node click in React Flow view
+  const handleNodeClick = useCallback((event, node) => {
+    if (node.type === 'fileNode' && node.data.fullPath && onNodeClick) {
+      onNodeClick(node.data.fullPath);
+    }
+  }, [onNodeClick]);
+
   const isEmpty = !inputNodes || inputNodes.length === 0;
 
   if (isEmpty) {
@@ -73,41 +84,71 @@ export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, hi
 
   return (
     <div className="panel-canvas">
-      <div className="panel-canvas-inner">
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={handleNodesChange}
-          onEdgesChange={handleEdgesChange}
-          nodeTypes={nodeTypes}
-          defaultEdgeOptions={defaultEdgeOptions}
-          fitView
-          fitViewOptions={{ padding: 0.3 }}
-          minZoom={0.1}
-          maxZoom={2}
-          proOptions={{ hideAttribution: true }}
-          style={{ background: 'var(--bg-canvas-matte)' }}
+      {/* View Toggle */}
+      <div className="canvas-view-toggle">
+        <button
+          className={`canvas-view-btn ${viewMode === 'graph' ? 'active' : ''}`}
+          onClick={() => setViewMode('graph')}
+          title="Graph View"
         >
-          <Background
-            variant="dots"
-            gap={20}
-            size={1}
-            color="#27272a"
-          />
-          <Controls
-            showInteractive={false}
-            position="bottom-left"
-          />
-          <MiniMap
-            nodeColor={(node) => {
-              if (node.data?.highlighted) return '#ea580c';
-              return node.data?.color || '#27272a';
-            }}
-            maskColor="rgba(9, 9, 11, 0.85)"
-            style={{ width: 140, height: 100 }}
-          />
-        </ReactFlow>
+          <GitBranch size={13} />
+          Graph
+        </button>
+        <button
+          className={`canvas-view-btn ${viewMode === 'steps' ? 'active' : ''}`}
+          onClick={() => setViewMode('steps')}
+          title="Step View"
+        >
+          <LayoutGrid size={13} />
+          Steps
+        </button>
       </div>
+
+      {viewMode === 'graph' ? (
+        <div className="panel-canvas-inner">
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={handleNodesChange}
+            onEdgesChange={handleEdgesChange}
+            onNodeClick={handleNodeClick}
+            nodeTypes={nodeTypes}
+            defaultEdgeOptions={defaultEdgeOptions}
+            fitView
+            fitViewOptions={{ padding: 0.3 }}
+            minZoom={0.1}
+            maxZoom={2}
+            proOptions={{ hideAttribution: true }}
+            style={{ background: 'var(--bg-canvas-matte)' }}
+          >
+            <Background
+              variant="dots"
+              gap={20}
+              size={1}
+              color="#27272a"
+            />
+            <Controls
+              showInteractive={false}
+              position="bottom-left"
+            />
+            <MiniMap
+              nodeColor={(node) => {
+                if (node.data?.highlighted) return '#ea580c';
+                return node.data?.color || '#27272a';
+              }}
+              maskColor="rgba(9, 9, 11, 0.85)"
+              style={{ width: 140, height: 100 }}
+            />
+          </ReactFlow>
+        </div>
+      ) : (
+        <StepwiseView
+          nodes={inputNodes}
+          edges={inputEdges}
+          highlightedNodes={highlightedNodes}
+          onNodeClick={onNodeClick}
+        />
+      )}
     </div>
   );
 }
