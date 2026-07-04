@@ -1,4 +1,4 @@
-# 🔥 Amaterasu (v2.0) — Codebase Intelligence Engine
+# 🔥 Amaterasu — Codebase Intelligence Engine
 
 Amaterasu is a premium, high-fidelity codebase visualization and intelligence engine designed to parse JavaScript, TypeScript, Python, Go, Rust, Java, C#, and other programming languages. It constructs interactive dependency concept maps, compares source files side-by-side, streams AI-powered architectural narratives, and generates interactive quizzes to test codebase comprehension.
 
