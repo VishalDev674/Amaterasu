@@ -1,27 +1,25 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, FolderSearch, Route, Sparkles, ChevronUp, X } from 'lucide-react';
+import { Send, FolderSearch, GitCompare, Brain, BookOpen, Zap } from 'lucide-react';
 
 export default function CommandBar({
   onAnalyze,
   onNarrative,
-  onTrace,
-  onClearTrace,
-  actions,
   isAnalyzing,
   isStreaming,
   hasRepo,
-  activeTrace,
+  onOpenCompare,
+  onOpenQuiz,
 }) {
   const [input, setInput] = useState('');
-  const [showTraceMenu, setShowTraceMenu] = useState(false);
+  const [showQuizMenu, setShowQuizMenu] = useState(false);
   const inputRef = useRef(null);
-  const menuRef = useRef(null);
+  const quizMenuRef = useRef(null);
 
   // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setShowTraceMenu(false);
+      if (quizMenuRef.current && !quizMenuRef.current.contains(e.target)) {
+        setShowQuizMenu(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -32,8 +30,6 @@ export default function CommandBar({
     e.preventDefault();
     if (!input.trim()) return;
 
-    // If input looks like a path or git URL, analyze it
-    // Windows: C:\path or C:/path, Unix: /path, relative: ./path or ../path
     const trimmed = input.trim();
     const isWindowsPath = /^[a-zA-Z]:[/\\]/.test(trimmed);
     const isUnixPath = trimmed.startsWith('/');
@@ -45,15 +41,9 @@ export default function CommandBar({
     } else if (hasRepo) {
       onNarrative(trimmed);
     } else {
-      // Try it as a path anyway — user may have just typed a path without a drive letter
       onAnalyze(trimmed);
     }
     setInput('');
-  };
-
-  const handleTraceAction = (actionName) => {
-    setShowTraceMenu(false);
-    onTrace(actionName);
   };
 
   const isBusy = isAnalyzing || isStreaming;
@@ -77,48 +67,47 @@ export default function CommandBar({
 
       {hasRepo && (
         <>
+          {/* Compare Button */}
           <button
-            className="command-action-btn"
-            onClick={() => onNarrative('Explain the overall architecture of this codebase')}
-            disabled={isBusy}
+            className="command-action-btn command-action-btn--compare"
+            onClick={onOpenCompare}
+            disabled={isAnalyzing}
+            title="Compare two files"
           >
-            <Sparkles size={14} />
-            Story
+            <GitCompare size={14} />
+            Compare
           </button>
 
-          <div className="trace-dropdown" ref={menuRef}>
+          {/* Quiz Dropdown */}
+          <div className="trace-dropdown" ref={quizMenuRef}>
             <button
-              className={`command-action-btn ${activeTrace ? 'active' : ''}`}
-              onClick={() => {
-                if (activeTrace) {
-                  onClearTrace();
-                } else {
-                  setShowTraceMenu(!showTraceMenu);
-                }
-              }}
+              className="command-action-btn command-action-btn--quiz"
+              onClick={() => setShowQuizMenu(v => !v)}
               disabled={isAnalyzing}
+              title="Start a quiz"
             >
-              {activeTrace ? <X size={14} /> : <Route size={14} />}
-              {activeTrace ? 'Clear' : 'Trace'}
-              {!activeTrace && <ChevronUp size={10} />}
+              <Brain size={14} />
+              Quiz
             </button>
 
-            {showTraceMenu && (
+            {showQuizMenu && (
               <div className="trace-dropdown-menu">
-                {(actions.length > 0 ? actions : [
-                  { name: 'User Login', description: 'Auth flow trace' },
-                  { name: 'API Request', description: 'Request pipeline' },
-                  { name: 'Data Query', description: 'DB read operation' },
-                ]).map((action) => (
-                  <button
-                    key={action.name}
-                    className="trace-dropdown-item"
-                    onClick={() => handleTraceAction(action.name)}
-                  >
-                    {action.name}
-                    <span className="trace-dropdown-item-desc">{action.description}</span>
-                  </button>
-                ))}
+                <button
+                  className="trace-dropdown-item"
+                  onClick={() => { setShowQuizMenu(false); onOpenQuiz('beginner'); }}
+                >
+                  <BookOpen size={13} color="#22c55e" />
+                  Beginner
+                  <span className="trace-dropdown-item-desc">Conceptual questions</span>
+                </button>
+                <button
+                  className="trace-dropdown-item"
+                  onClick={() => { setShowQuizMenu(false); onOpenQuiz('advanced'); }}
+                >
+                  <Zap size={13} color="#f97316" />
+                  Advanced
+                  <span className="trace-dropdown-item-desc">Deep-dive implementation</span>
+                </button>
               </div>
             )}
           </div>
@@ -132,7 +121,7 @@ export default function CommandBar({
           className="command-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={hasRepo ? 'Ask about the architecture...' : 'Enter path to analyze (e.g. C:\Users\you\project)'}
+          placeholder={hasRepo ? 'Ask about the architecture...' : 'Enter path to analyze (e.g. C:\\Users\\you\\project)'}
           disabled={isBusy}
         />
         <button

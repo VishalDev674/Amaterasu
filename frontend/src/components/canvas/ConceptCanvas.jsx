@@ -2,10 +2,11 @@ import { useMemo, useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
   Background,
+  BackgroundVariant,
   Controls,
-  MiniMap,
   useNodesState,
   useEdgesState,
+  Panel,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import ConceptNode from './ConceptNode';
@@ -19,14 +20,23 @@ const nodeTypes = {
 };
 
 const defaultEdgeOptions = {
-  type: 'default',
-  style: { strokeWidth: 1 },
+  type: 'smoothstep',
+  animated: false,
+  style: {
+    strokeWidth: 1.5,
+    stroke: '#3f3f46',
+  },
+  markerEnd: {
+    type: 'arrowclosed',
+    color: '#52525b',
+    width: 14,
+    height: 14,
+  },
 };
 
-export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, highlightedNodes, highlightedEdges, onNodesChange, onEdgesChange, onNodeClick }) {
-  const [viewMode, setViewMode] = useState('graph'); // 'graph' | 'steps'
+export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, highlightedNodes, onNodeClick }) {
+  const [viewMode, setViewMode] = useState('graph');
 
-  // Inject highlight state into node data
   const processedNodes = useMemo(() => {
     if (!inputNodes) return [];
     return inputNodes.map(node => ({
@@ -41,25 +51,20 @@ export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, hi
   const [nodes, setNodes, handleNodesChange] = useNodesState(processedNodes);
   const [edges, setEdges, handleEdgesChange] = useEdgesState(inputEdges || []);
 
-  // Sync external state changes into ReactFlow's internal state while preserving dragged positions
   useEffect(() => {
     setNodes((currentNodes) => {
       const positionMap = new Map(currentNodes.map(n => [n.id, n.position]));
       return processedNodes.map(node => {
         const currentPos = positionMap.get(node.id);
-        return {
-          ...node,
-          position: currentPos || node.position,
-        };
+        return { ...node, position: currentPos || node.position };
       });
     });
   }, [processedNodes, setNodes]);
 
   useEffect(() => {
     setEdges(inputEdges || []);
-  }, [inputEdges]);
+  }, [inputEdges, setEdges]);
 
-  // Handle node click in React Flow view
   const handleNodeClick = useCallback((event, node) => {
     if (node.type === 'fileNode' && node.data.fullPath && onNodeClick) {
       onNodeClick(node.data.fullPath);
@@ -72,7 +77,12 @@ export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, hi
     return (
       <div className="panel-canvas">
         <div className="canvas-empty-state">
-          <div className="canvas-empty-icon">🔮</div>
+          <div className="canvas-empty-orbit">
+            <div className="canvas-empty-icon">🔮</div>
+            <div className="canvas-orbit-ring canvas-orbit-ring--1" />
+            <div className="canvas-orbit-ring canvas-orbit-ring--2" />
+            <div className="canvas-orbit-ring canvas-orbit-ring--3" />
+          </div>
           <div className="canvas-empty-text">
             <h3>Concept Canvas</h3>
             <p>Analyze a repository to visualize its architecture as an interactive concept map</p>
@@ -91,7 +101,7 @@ export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, hi
           onClick={() => setViewMode('graph')}
           title="Graph View"
         >
-          <GitBranch size={13} />
+          <GitBranch size={12} />
           Graph
         </button>
         <button
@@ -99,7 +109,7 @@ export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, hi
           onClick={() => setViewMode('steps')}
           title="Step View"
         >
-          <LayoutGrid size={13} />
+          <LayoutGrid size={12} />
           Steps
         </button>
       </div>
@@ -115,30 +125,43 @@ export default function ConceptCanvas({ nodes: inputNodes, edges: inputEdges, hi
             nodeTypes={nodeTypes}
             defaultEdgeOptions={defaultEdgeOptions}
             fitView
-            fitViewOptions={{ padding: 0.3 }}
-            minZoom={0.1}
-            maxZoom={2}
+            fitViewOptions={{ padding: 0.25 }}
+            minZoom={0.05}
+            maxZoom={2.5}
             proOptions={{ hideAttribution: true }}
-            style={{ background: 'var(--bg-canvas-matte)' }}
+            style={{ background: 'transparent' }}
           >
+            {/* Multi-layer background */}
             <Background
-              variant="dots"
-              gap={20}
-              size={1}
+              id="bg-dots"
+              variant={BackgroundVariant.Dots}
+              gap={28}
+              size={1.2}
               color="#27272a"
+              style={{ opacity: 0.7 }}
             />
+
             <Controls
               showInteractive={false}
               position="bottom-left"
+              className="canvas-controls"
             />
-            <MiniMap
-              nodeColor={(node) => {
-                if (node.data?.highlighted) return '#ea580c';
-                return node.data?.color || '#27272a';
-              }}
-              maskColor="rgba(9, 9, 11, 0.85)"
-              style={{ width: 140, height: 100 }}
-            />
+
+
+
+            {/* Node count badge */}
+            <Panel position="top-left" className="canvas-info-panel">
+              <span className="canvas-info-badge">
+                <span className="canvas-info-dot" />
+                {inputNodes.filter(n => n.type === 'conceptNode').length} clusters
+              </span>
+              <span className="canvas-info-badge">
+                {inputNodes.filter(n => n.type === 'fileNode').length} files
+              </span>
+              <span className="canvas-info-badge">
+                {(inputEdges || []).length} edges
+              </span>
+            </Panel>
           </ReactFlow>
         </div>
       ) : (

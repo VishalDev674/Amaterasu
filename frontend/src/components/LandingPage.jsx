@@ -1,5 +1,30 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+
+// Generate floating ember particles once at module load (stable, avoids Math.random inside render)
+const PARTICLES = Array.from({ length: 25 }).map((_, i) => {
+  const size = Math.random() * 3 + 1;
+  const left = Math.random() * 100;
+  const bottom = Math.random() * 20;
+  const delay = Math.random() * 8;
+  const duration = Math.random() * 8 + 8;
+  return {
+    id: i,
+    style: {
+      position: 'absolute',
+      width: `${size}px`,
+      height: `${size}px`,
+      left: `${left}%`,
+      bottom: `${bottom}%`,
+      background: 'rgba(234, 88, 12, 0.5)',
+      boxShadow: '0 0 6px rgba(234, 88, 12, 0.7), 0 0 12px rgba(249, 115, 22, 0.4)',
+      borderRadius: '50%',
+      pointerEvents: 'none',
+      animation: `floatUp ${duration}s linear infinite`,
+      animationDelay: `${delay}s`,
+    }
+  };
+});
 
 export default function LandingPage({ onAnalyze, isAnalyzing, error, setError }) {
   const [input, setInput] = useState('');
@@ -10,39 +35,12 @@ export default function LandingPage({ onAnalyze, isAnalyzing, error, setError })
     onAnalyze(input.trim());
   };
 
-  // Generate floating ember particles with stable random coordinates
-  const particles = useMemo(() => {
-    return Array.from({ length: 25 }).map((_, i) => {
-      const size = Math.random() * 3 + 1; // 1px to 4px
-      const left = Math.random() * 100; // 0% to 100%
-      const bottom = Math.random() * 20; // start low
-      const delay = Math.random() * 8; // 0s to 8s delay
-      const duration = Math.random() * 8 + 8; // 8s to 16s duration
-      
-      return {
-        id: i,
-        style: {
-          position: 'absolute',
-          width: `${size}px`,
-          height: `${size}px`,
-          left: `${left}%`,
-          bottom: `${bottom}%`,
-          background: 'rgba(234, 88, 12, 0.5)',
-          boxShadow: '0 0 6px rgba(234, 88, 12, 0.7), 0 0 12px rgba(249, 115, 22, 0.4)',
-          borderRadius: '50%',
-          pointerEvents: 'none',
-          animation: `floatUp ${duration}s linear infinite`,
-          animationDelay: `${delay}s`,
-        }
-      };
-    });
-  }, []);
 
   return (
     <div className="landing-container">
       {/* Background stars/embers */}
       <div className="landing-particles">
-        {particles.map(p => (
+        {PARTICLES.map(p => (
           <div key={p.id} style={p.style} />
         ))}
       </div>

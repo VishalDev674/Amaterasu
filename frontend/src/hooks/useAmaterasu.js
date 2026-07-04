@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
-import { analyzeRepo, streamNarrative, traceFlow as traceFlowApi, getAvailableActions, fetchFileContent } from '../services/api';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { analyzeRepo, streamNarrative, fetchFileContent } from '../services/api';
 
 export function useAmaterasu() {
   const [nodes, setNodes] = useState([]);
@@ -13,18 +13,22 @@ export function useAmaterasu() {
     activeTrace: null,
   });
   const [narrative, setNarrative] = useState('');
+  const [chatHistory, setChatHistory] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [highlightedNodes, setHighlightedNodes] = useState(new Set());
   const [highlightedEdges, setHighlightedEdges] = useState(new Set());
   const [error, setError] = useState(null);
   const [repoPath, setRepoPath] = useState('');
-  const [actions, setActions] = useState([]);
+
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileContent, setFileContent] = useState(null);
   const [isLoadingFile, setIsLoadingFile] = useState(false);
 
   const streamCleanupRef = useRef(null);
+  // Always keep a ref to the latest chatHistory so generateNarrative closure never goes stale
+  const chatHistoryRef = useRef(chatHistory);
+  useEffect(() => { chatHistoryRef.current = chatHistory; }, [chatHistory]);
 
   // Analyze a repository
   const analyze = useCallback(async (path) => {
@@ -50,11 +54,6 @@ export function useAmaterasu() {
         activeTrace: null,
       });
 
-      // Fetch available actions
-      try {
-        const acts = await getAvailableActions();
-        setActions(acts);
-      } catch { /* ignore */ }
 
       return result;
     } catch (err) {
@@ -70,70 +69,50 @@ export function useAmaterasu() {
     // Cleanup previous stream
     if (streamCleanupRef.current) streamCleanupRef.current();
 
+    const entryId = Date.now();
+    const timestamp = new Date();
+
     setIsStreaming(true);
     setNarrative('');
     setError(null);
 
+    // Add a new entry for this command immediately
+    setChatHistory(prev => [
+      ...prev,
+      { id: entryId, command: action, response: '', isStreaming: true, timestamp },
+    ]);
+
     const cleanup = streamNarrative(
       action,
-      (chunk) => setNarrative(prev => prev + chunk),
-      () => setIsStreaming(false),
+      (chunk) => {
+        setNarrative(prev => prev + chunk);
+        setChatHistory(prev => prev.map(entry =>
+          entry.id === entryId
+            ? { ...entry, response: entry.response + chunk }
+            : entry
+        ));
+      },
+      () => {
+        setIsStreaming(false);
+        setChatHistory(prev => prev.map(entry =>
+          entry.id === entryId ? { ...entry, isStreaming: false } : entry
+        ));
+      },
       (err) => {
         setError(err);
         setIsStreaming(false);
-      }
+        setChatHistory(prev => prev.map(entry =>
+          entry.id === entryId
+            ? { ...entry, isStreaming: false, error: err }
+            : entry
+        ));
+      },
+      chatHistoryRef.current, // pass history for conversational memory (always fresh via ref)
     );
 
     streamCleanupRef.current = cleanup;
   }, []);
 
-  // Trace an execution flow
-  const traceFlow = useCallback(async (actionName) => {
-    setError(null);
-    try {
-      const result = await traceFlowApi(actionName);
-      if (result.error) {
-        setError(result.error);
-        return;
-      }
-
-      setHighlightedNodes(new Set(result.highlightedNodes || []));
-      setHighlightedEdges(new Set(result.highlightedEdges || []));
-
-      setTelemetry(prev => ({
-        ...prev,
-        activeTrace: actionName,
-      }));
-
-      // Update edge styles for highlighting
-      setEdges(prev => prev.map(edge => {
-        const isHighlighted = result.highlightedEdges?.includes(edge.id);
-        return {
-          ...edge,
-          animated: isHighlighted,
-          style: isHighlighted
-            ? { stroke: '#ea580c', strokeWidth: 2.5 }
-            : { stroke: edge.id.startsWith('dep-') ? '#9a3412' : '#27272a', strokeWidth: edge.id.startsWith('dep-') ? 1.5 : 1 },
-        };
-      }));
-
-      return result;
-    } catch (err) {
-      setError(err.message);
-    }
-  }, []);
-
-  // Clear trace highlighting
-  const clearTrace = useCallback(() => {
-    setHighlightedNodes(new Set());
-    setHighlightedEdges(new Set());
-    setTelemetry(prev => ({ ...prev, activeTrace: null }));
-    setEdges(prev => prev.map(edge => ({
-      ...edge,
-      animated: false,
-      style: { stroke: edge.id.startsWith('dep-') ? '#9a3412' : '#27272a', strokeWidth: edge.id.startsWith('dep-') ? 1.5 : 1 },
-    })));
-  }, []);
 
   // Select a file to view its code
   const selectFile = useCallback(async (filePath) => {
@@ -164,10 +143,11 @@ export function useAmaterasu() {
     // State
     nodes, edges, clusters, telemetry, narrative,
     isAnalyzing, isStreaming, highlightedNodes, highlightedEdges,
-    error, repoPath, actions,
+    error, repoPath,
     selectedFile, fileContent, isLoadingFile,
+    chatHistory,
     // Actions
-    analyze, generateNarrative, traceFlow, clearTrace,
+    analyze, generateNarrative,
     selectFile, closeFileViewer,
     setNodes, setEdges, setError,
   };

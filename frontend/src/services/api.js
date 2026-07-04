@@ -13,66 +13,64 @@ export async function analyzeRepo(repoPath) {
   return res.json();
 }
 
-export function streamNarrative(action, onChunk, onDone, onError) {
-  const url = `${API_BASE}/narrative?action=${encodeURIComponent(action)}`;
-  const eventSource = new EventSource(url);
+export function streamNarrative(action, onChunk, onDone, onError, chatHistory = []) {
+  let cancelled = false;
+  const controller = new AbortController();
 
-  eventSource.onmessage = (event) => {
+  // Strip in-progress entries from history before sending (only send completed turns)
+  const completedHistory = chatHistory
+    .filter(e => !e.isStreaming && e.response)
+    .map(e => ({ command: e.command, response: e.response }));
+
+  (async () => {
     try {
-      const data = JSON.parse(event.data);
-      if (data.done) {
-        eventSource.close();
-        onDone?.();
-      } else if (data.error) {
-        eventSource.close();
-        onError?.(data.error);
-      } else if (data.content) {
-        onChunk(data.content);
+      const res = await fetch(`${API_BASE}/narrative`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, chatHistory: completedHistory }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Stream failed' }));
+        onError?.(err.error || 'Stream failed');
+        return;
       }
-    } catch {
-      // ignore parse errors
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (!cancelled) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete last line
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.done) { onDone?.(); return; }
+            if (data.error) { onError?.(data.error); return; }
+            if (data.content) onChunk(data.content);
+          } catch { /* ignore parse errors */ }
+        }
+      }
+      onDone?.();
+    } catch (err) {
+      if (err.name !== 'AbortError') onError?.(err.message || 'Connection lost');
     }
+  })();
+
+  return () => {
+    cancelled = true;
+    controller.abort();
   };
-
-  eventSource.onerror = () => {
-    eventSource.close();
-    onError?.('Connection lost');
-  };
-
-  return () => eventSource.close();
 }
 
-export async function traceFlow(action) {
-  const res = await fetch(`${API_BASE}/trace`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: 'Trace failed' }));
-    throw new Error(err.error || 'Trace failed');
-  }
-  return res.json();
-}
-
-export async function getAvailableActions() {
-  const res = await fetch(`${API_BASE}/actions`);
-  return res.json();
-}
-
-export async function getTelemetry() {
-  const res = await fetch(`${API_BASE}/telemetry`);
-  return res.json();
-}
-
-export async function queryVectorStore(query, topK = 5) {
-  const res = await fetch(`${API_BASE}/query`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query, topK }),
-  });
-  return res.json();
-}
 
 export async function fetchFileContent(filePath) {
   const res = await fetch(`${API_BASE}/file-content?path=${encodeURIComponent(filePath)}`);
