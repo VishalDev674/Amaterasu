@@ -35,29 +35,58 @@ function FileNode({ data }) {
       <Handle
         type="target"
         position={Position.Top}
-        style={{ background: langColor, border: '2px solid rgba(0,0,0,0.4)', width: 7, height: 7, top: -4 }}
+        style={{
+          background: langColor,
+          border: '2px solid rgba(0,0,0,0.4)',
+          width: 7,
+          height: 7,
+          top: -4,
+          boxShadow: `0 0 6px ${langColor}`,
+        }}
       />
 
-      <div className="file-node-lang-bar" style={{ background: langColor }} />
+      {/* Left lang color strip */}
+      <div
+        className="file-node-lang-bar"
+        style={{
+          background: `linear-gradient(180deg, ${langColor}, ${langColor}50)`,
+          boxShadow: `2px 0 8px ${langColor}40`,
+        }}
+      />
 
       <div className="file-node-inner">
-        <div className="file-node-lang-badge" style={{ color: langColor, background: `${langColor}1a`, border: `1px solid ${langColor}33` }}>
+        <div
+          className="file-node-lang-badge"
+          style={{
+            color: langColor,
+            background: `${langColor}18`,
+            border: `1px solid ${langColor}40`,
+            boxShadow: `0 0 6px ${langColor}20`,
+          }}
+        >
           {langLabel}
         </div>
         <div className="file-node-name">{data.label}</div>
         <div className="file-node-stats">
-          <span>{data.lineCount}L</span>
+          <span className="file-node-stat-item">{data.lineCount}L</span>
           <span className="file-node-stat-sep">·</span>
-          <span>{data.functions}fn</span>
+          <span className="file-node-stat-item">{data.functions}fn</span>
           <span className="file-node-stat-sep">·</span>
-          <span>{data.classes}cls</span>
+          <span className="file-node-stat-item">{data.classes}cls</span>
         </div>
       </div>
 
       <Handle
         type="source"
         position={Position.Bottom}
-        style={{ background: langColor, border: '2px solid rgba(0,0,0,0.4)', width: 7, height: 7, bottom: -4 }}
+        style={{
+          background: langColor,
+          border: '2px solid rgba(0,0,0,0.4)',
+          width: 7,
+          height: 7,
+          bottom: -4,
+          boxShadow: `0 0 6px ${langColor}`,
+        }}
       />
     </div>
   );
