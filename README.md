@@ -52,6 +52,8 @@ Built with an **Obsidian & Ember** dark theme, it offers a real-time visual canv
 ### Frontend (`/frontend`)
 
 - [App.jsx](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/App.jsx) — Main app wrapper containing UI state, drag-and-resize dividers, layout structures, and panel controls.
+- **Core Components (`/components`)**:
+  - [LandingPage.jsx](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/components/LandingPage.jsx) — Entry-point landing interface. Users input local directory paths or remote GitHub repository links. Includes dynamic background ember particles and a 5-step interactive analysis flowchart visualizer.
 - **Canvas Components (`/components/canvas`)**:
   - [ConceptCanvas.jsx](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/components/canvas/ConceptCanvas.jsx) — Layout and configuration for React Flow canvas. Manages graph coordinates, background dots, controls, and view toggles.
   - [StepwiseView.jsx](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/components/canvas/StepwiseView.jsx) — Sequential workflow rendering of codebase domains, grouping files by cluster in a grid layout.
@@ -63,6 +65,9 @@ Built with an **Obsidian & Ember** dark theme, it offers a real-time visual canv
   - [ComparePanel.jsx](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/components/dashboard/ComparePanel.jsx) — UI component to pick two files, check statistics, and view their comparison analysis.
   - [NarrativePanel.jsx](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/components/dashboard/NarrativePanel.jsx) — Streams architectural narratives, displaying chat bubbles and rich markdown formatting.
   - [QuizModal.jsx](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/components/dashboard/QuizModal.jsx) — Renders the interactive quiz interface (Beginner/Advanced), progress tracker, and correct/incorrect answer breakdowns.
+- **State & Networking**:
+  - [useAmaterasu.js](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/hooks/useAmaterasu.js) — Custom state hook managing nodes, edges, telemetry, chat history, and analysis/streaming states.
+  - [api.js](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/services/api.js) — API client layer implementing server communications (analyzing repository, stream narratives via SSE, fetching file content).
 - **Styling**:
   - [index.css](file:///c:/Users/Vishal%20Kumar/Desktop/Amaterasu/frontend/src/index.css) — Custom variables, dark Obsidian palette, flex layout guidelines, and CSS animations.
 
