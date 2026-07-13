@@ -41,12 +41,16 @@ const cleanTempRepos = () => {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control', 'X-Requested-With']
-}));
-app.options('*', cors());
+const corsOptions = {
+  origin: [
+    "https://amaterasux.netlify.app",
+    "https://yourdomain.com",
+    "http://localhost:5173"
+  ],
+  credentials: true
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json({ limit: '50mb' }));
 
