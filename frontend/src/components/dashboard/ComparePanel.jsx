@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { GitCompare, X, ChevronDown, Loader2, FileCode, Search, AlertTriangle, Sparkles, ArrowLeftRight } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL 
-  ? `${import.meta.env.VITE_API_URL}/api`
-  : 'http://localhost:3001/api';
+const API_BASE = import.meta.env.DEV 
+  ? 'http://localhost:3001/api'
+  : '/api';
 
 async function fetchComparison(fileA, fileB) {
   const res = await fetch(`${API_BASE}/compare`, {

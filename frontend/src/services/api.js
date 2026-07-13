@@ -1,6 +1,8 @@
-const API_BASE = import.meta.env.VITE_API_URL 
-  ? `${import.meta.env.VITE_API_URL}/api`
-  : 'http://localhost:3001/api';
+// In production (Netlify), requests to /api/* are proxied to the Render backend via netlify.toml
+// In development, fall back to the local backend server
+const API_BASE = import.meta.env.DEV 
+  ? 'http://localhost:3001/api'
+  : '/api';
 
 export async function analyzeRepo(repoPath) {
   const res = await fetch(`${API_BASE}/analyze`, {

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Brain, X, CheckCircle, XCircle, ChevronRight, Trophy, RefreshCw, BookOpen, Zap, Loader2, AlertTriangle } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL 
-  ? `${import.meta.env.VITE_API_URL}/api`
-  : 'http://localhost:3001/api';
+const API_BASE = import.meta.env.DEV 
+  ? 'http://localhost:3001/api'
+  : '/api';
 
 async function fetchQuiz(level) {
   const res = await fetch(`${API_BASE}/quiz`, {
