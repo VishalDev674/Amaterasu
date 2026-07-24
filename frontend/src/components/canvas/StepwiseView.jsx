@@ -1,9 +1,32 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { ChevronDown, ChevronUp, ArrowRight, ArrowLeft, ArrowDown, Layers } from 'lucide-react';
 
 export default function StepwiseView({ nodes, highlightedNodes, onNodeClick }) {
   const [expandedSteps, setExpandedSteps] = useState(new Set());
   const [hoveredStep, setHoveredStep] = useState(null);
+  const containerRef = useRef(null);
+  const [colsCount, setColsCount] = useState(3);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateCols = () => {
+      if (!containerRef.current) return;
+      const width = containerRef.current.clientWidth;
+      const availableWidth = Math.max(200, width - 64);
+      const computedCols = Math.max(1, Math.floor((availableWidth + 36) / 246));
+      setColsCount(computedCols);
+    };
+
+    updateCols();
+
+    const observer = new ResizeObserver(() => {
+      updateCols();
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
 
   const toggleExpand = (stepId) => {
     setExpandedSteps(prev => {
@@ -47,6 +70,15 @@ export default function StepwiseView({ nodes, highlightedNodes, onNodeClick }) {
     }).sort((a, b) => b.fileCount - a.fileCount);
   }, [nodes, highlightedNodes]);
 
+  const gridTemplateColumns = useMemo(() => {
+    const parts = [];
+    for (let i = 0; i < colsCount; i++) {
+      if (i > 0) parts.push('36px');
+      parts.push('minmax(200px, 1fr)');
+    }
+    return parts.join(' ');
+  }, [colsCount]);
+
   const handleFileClick = (filePath) => {
     if (onNodeClick && filePath) onNodeClick(filePath);
   };
@@ -77,7 +109,7 @@ export default function StepwiseView({ nodes, highlightedNodes, onNodeClick }) {
   }
 
   return (
-    <div className="stepwise-container">
+    <div className="stepwise-container" ref={containerRef}>
       {/* Ambient background orbs */}
       <div className="stepwise-bg-orb stepwise-bg-orb--1" />
       <div className="stepwise-bg-orb stepwise-bg-orb--2" />
@@ -89,14 +121,15 @@ export default function StepwiseView({ nodes, highlightedNodes, onNodeClick }) {
         <span className="stepwise-header-count">{steps.length} domains · {steps.reduce((a, s) => a + s.fileCount, 0)} files</span>
       </div>
 
-      <div className="stepwise-grid">
+      <div className="stepwise-grid" style={{ gridTemplateColumns }}>
         {steps.map((step, index) => {
-          const r = Math.floor(index / 3);
-          const c = index % 3;
+          const N = colsCount;
+          const r = Math.floor(index / N);
+          const c = index % N;
           const isEvenRow = r % 2 === 0;
 
           const stepRow = r * 2 + 1;
-          const stepCol = isEvenRow ? c * 2 + 1 : 5 - c * 2;
+          const stepCol = isEvenRow ? (c * 2 + 1) : (2 * N - 1 - c * 2);
 
           const isExpanded = expandedSteps.has(step.id);
           const displayedFiles = isExpanded ? step.files : step.files.slice(0, 4);
@@ -104,25 +137,28 @@ export default function StepwiseView({ nodes, highlightedNodes, onNodeClick }) {
 
           let connector = null;
           if (index < steps.length - 1) {
-            if (c < 2) {
+            const nextStep = steps[index + 1];
+            if (c < N - 1) {
               const connRow = stepRow;
-              const connCol = isEvenRow ? c * 2 + 2 : 4 - c * 2;
+              const connCol = isEvenRow ? (c * 2 + 2) : (2 * N - 2 - c * 2);
               connector = {
                 type: 'horizontal',
                 dir: isEvenRow ? 'right' : 'left',
                 gridRow: connRow,
                 gridColumn: connCol,
-                color: step.color,
+                fromColor: step.color,
+                toColor: nextStep?.color || step.color,
               };
             } else {
               const connRow = stepRow + 1;
-              const connCol = isEvenRow ? 5 : 1;
+              const connCol = isEvenRow ? (2 * N - 1) : 1;
               connector = {
                 type: 'vertical',
                 dir: 'down',
                 gridRow: connRow,
                 gridColumn: connCol,
-                color: step.color,
+                fromColor: step.color,
+                toColor: nextStep?.color || step.color,
               };
             }
           }
@@ -224,10 +260,14 @@ export default function StepwiseView({ nodes, highlightedNodes, onNodeClick }) {
                   style={{
                     gridRow: connector.gridRow,
                     gridColumn: connector.gridColumn,
-                    '--connector-color': connector.color,
+                    '--connector-from': connector.fromColor,
+                    '--connector-to': connector.toColor,
+                    '--connector-color': connector.fromColor,
                   }}
                 >
-                  <div className="stepwise-connector-line" />
+                  <div className="stepwise-connector-line">
+                    <div className="stepwise-connector-pulse" />
+                  </div>
                   <div className="stepwise-connector-arrow">
                     {connector.dir === 'right' && <ArrowRight size={14} />}
                     {connector.dir === 'left' && <ArrowLeft size={14} />}
